@@ -82,6 +82,13 @@ struct PanelView: View {
     private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(Palette.secondary)
+            if Snapshot.active {
+                // ImageRenderer can't draw a TextField.
+                Text(model.searchText.isEmpty ? "Search movies & shows" : model.searchText)
+                    .font(.system(size: 14))
+                    .foregroundStyle(model.searchText.isEmpty ? Palette.secondary : .white)
+                Spacer(minLength: 0)
+            } else {
             TextField("Search movies & shows", text: $model.searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
@@ -92,6 +99,7 @@ struct PanelView: View {
                     focused = true
                     return .handled
                 }
+            }
             if model.searching {
                 ProgressView().controlSize(.small)
             } else if isSearching {
@@ -135,10 +143,17 @@ struct PanelView: View {
 
     private func resultRow(_ title: JustWatch.Title) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            AsyncImage(url: title.poster) { image in
-                image.resizable().aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Palette.tileHi
+            Group {
+                // ImageRenderer can't wait for AsyncImage, so snapshots use preloaded posters.
+                if Snapshot.active, let poster = title.poster.flatMap({ Snapshot.posters[$0] }) {
+                    Image(nsImage: poster).resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    AsyncImage(url: title.poster) { image in
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Palette.tileHi
+                    }
+                }
             }
             .frame(width: 46, height: 68)
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -336,6 +351,17 @@ struct PanelView: View {
                 Text("Not paired")
             }
             Spacer()
+            if Snapshot.active {
+                Image(systemName: "slider.horizontal.3")  // ImageRenderer can't draw a Menu
+            } else {
+                settingsMenu
+            }
+        }
+        .font(.system(size: 11))
+        .foregroundStyle(Palette.secondary)
+    }
+
+    private var settingsMenu: some View {
             Menu {
                 Button("Reconnect") { model.connect() }
                 Button(showSettings ? "Hide TV address" : "Change TV address…") { showSettings.toggle() }
@@ -352,9 +378,6 @@ struct PanelView: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-        }
-        .font(.system(size: 11))
-        .foregroundStyle(Palette.secondary)
     }
 
     // MARK: - Pieces

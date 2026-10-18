@@ -1,0 +1,7 @@
+// Signing for on-device builds. Don't edit this file: put your values in
+// Config/Signing.local.xcconfig (git-ignored), e.g.
+//   DEVELOPMENT_TEAM = ABCDE12345        // Xcode → Settings → Accounts → your (Personal) Team ID
+//   BUNDLE_ID_PREFIX = com.yourname      // must be unique to you for free signing
+DEVELOPMENT_TEAM =
+BUNDLE_ID_PREFIX = com.example
+#include? "Signing.local.xcconfig"

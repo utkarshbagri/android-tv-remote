@@ -1,7 +1,7 @@
 # Generate the Xcode project with:  xcodegen generate
 name: TVRemote
 options:
-  bundleIdPrefix: co.ubrain
+  bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "16.0"
 packages:
@@ -12,18 +12,20 @@ targets:
     type: application
     platform: iOS
     sources: [App/TVRemote]
+    # DEVELOPMENT_TEAM + BUNDLE_ID_PREFIX come from Config/Signing(.local).xcconfig.
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     dependencies:
       - package: ATVRemoteKit
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: co.ubrain.tvremote
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).tvremote
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
-        # Free signing: set your Personal Team in Xcode (Signing & Capabilities) or here.
-        DEVELOPMENT_TEAM: DN9QU9K4QQ
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: TV Remote

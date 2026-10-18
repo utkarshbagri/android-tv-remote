@@ -125,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 @MainActor
 enum Snapshot {
     static var active = false
+    static var posters: [URL: NSImage] = [:]
 
     static func render(to path: String, query: String? = nil) async {
         active = true
@@ -135,7 +136,13 @@ enum Snapshot {
         model.volume = 22
         if let query {
             model.searchText = query
-            model.results = (try? await JustWatch.search(query)) ?? []
+            // Top 4 results with posters preloaded (the panel shows about that many).
+            model.results = Array(((try? await JustWatch.search(query)) ?? []).filter { !$0.offers.isEmpty }.prefix(4))
+            for title in model.results {
+                guard let url = title.poster, let (data, _) = try? await URLSession.shared.data(from: url),
+                      let image = NSImage(data: data) else { continue }
+                posters[url] = image
+            }
             model.searching = false
             FileHandle.standardError.write(Data("results: \(model.results.count)\n".utf8))
         }

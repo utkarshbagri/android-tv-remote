@@ -1,71 +1,97 @@
-# tv-remote-ios
+# Android TV remote: iPhone app, Mac menu-bar widget and cross-app search
 
-A minimal iPhone remote for Android TV built on Google's **Android TV Remote protocol v2**. It is the same
-protocol the Google TV app uses, and the protobuf field numbers come from
-[androidtvremote2](https://github.com/tronikos/androidtvremote2). It handles pairing, the D-pad,
-OK/Back/Home, volume, and deep-link launches. There are no dependencies: protobuf is hand-rolled and
-the TLS client cert is generated on the device and kept in the Keychain.
+Search for a title once, see which of your streaming apps has it, and open it on the TV.
+Netflix, Prime Video, JioHotstar, SonyLIV, Apple TV and YouTube all work, with no "open app → search
+→ type with the D-pad" dance.
 
+It talks to the TV directly using **Google's Android TV Remote protocol v2**, the same protocol the
+Google TV app uses. It's pure Swift with zero dependencies: protobuf is hand-rolled, the TLS client
+certificate is generated on the device, and pairing uses the 6-character code the TV shows.
+
+<p align="center">
+  <img src="docs/screenshots/mac-search.png" width="270" alt="Mac widget: search across apps">
+  &nbsp;
+  <img src="docs/screenshots/mac-widget.png" width="270" alt="Mac widget: remote">
+  &nbsp;
+  <img src="docs/screenshots/iphone-search.png" width="250" alt="iPhone app: search across apps">
+</p>
+
+## What's in here
+
+| | |
+|---|---|
+| **`ATVRemoteKit`** | The protocol, as a Swift package (iOS 16+ / macOS 14+). It covers pairing (port 6467), the remote (6466), Bonjour discovery and JustWatch search. |
+| **iPhone app** (`App/TVRemote`) | **Search across apps**: poster/title/year rows; tap an app to open the title on the TV. Plus the remote: D-pad, OK/Back/Home, volume, play/pause. |
+| **Mac menu-bar widget** (`Sources/TVRemoteBar`) | A dark popover remote with **search across apps**, keyboard control (arrows, Return, Esc) and a ⌃⌥T hotkey. It builds with just the Command Line Tools, no Xcode. |
+| **`atvctl`** | A CLI over the same kit: `pair`, `key`, `launch`, `discover`. Handy for poking at a TV. |
+
+Tested on an Acer R4 (Android TV 14) in India. Any Android/Google TV with the "Android TV Remote
+Service" should work.
+
+## How search works
+[JustWatch's](https://www.justwatch.com) GraphQL API returns, for each title, the services that carry
+it, with web links. The widget keeps only links that the TV apps' intent filters actually claim. It
+then sends them to the TV as a `RemoteAppLinkLaunchRequest`, and the TV fires `ACTION_VIEW` on the
+URL. This is JustWatch's **unofficial** public API, so it's fine for personal use and may change
+without notice.
+
+Per-app findings live in [`docs/DEEPLINKS.md`](docs/DEEPLINKS.md). The fun ones:
+- **Netflix ignores title links unless they carry `source=30`.** Normally that's an intent extra,
+  but the remote protocol can only send a bare URL, so it goes in the query string:
+  `https://www.netflix.com/title/<id>?source=30`.
+- **Prime Video** only claims `app.primevideo.com/detail?gti=…`, not `www.primevideo.com`.
+- **JioHotstar** claims `www.hotstar.com`, not `jiohotstar.com`.
+- **Profile pickers** ("Who's watching?") can swallow the link on a cold start, so after OK both
+  apps re-send it.
+- **F1 TV** declares no deep links and can't be opened over this protocol at all.
+
+## Protocol gotchas (things the docs don't tell you)
+- **The TV doesn't strictly verify the pairing secret against the presented certificate.** If TLS
+  presents a different identity than the one you hashed, pairing still "succeeds", but port 6466 then
+  rejects you with `bad certificate` (TV log: `Incoming connection from unknown device`). On macOS, the
+  file-based keychain ignores cert labels, and `SecItemDelete` removes only the first match, so stale
+  identities got mixed up. Fix: take the certificate *from the SecIdentity* you hand to TLS.
+- **The TV dedupes paired certs by subject**, so every client identity gets a unique CN.
+- **Keys sent right after `remote_start` are silently dropped** (lost at 0 ms, delivered at 300 ms or
+  later), so `connect()` settles for 500 ms.
+- The client cert needs `basicConstraints CA:TRUE` and a SAN, the same as androidtvremote2's.
+- Some TVs don't advertise `_androidtvremote2._tcp`, so discovery also browses `_googlecast._tcp`.
+- There is no "set volume to N", only volume key steps. The widget's slider sends the difference.
+
+## Build it
+
+**Mac widget** (Command Line Tools are enough):
+```bash
+scripts/build-mac-widget.sh      # installs ~/Applications/TV Remote.app and opens it
 ```
-Sources/ATVRemoteKit/   protocol core (iOS 16+ / macOS 13+)
-  Protobuf.swift          tiny protobuf writer/reader + varint framing
-  ClientIdentity.swift    RSA key + self-signed X.509 (DER built by hand) in the Keychain
-  FramedTLSConnection     Network.framework TLS with client cert; captures the TV's cert
-  PairingSession          port 6467: polo handshake + SHA-256 secret from the 6-hex-digit code
-  RemoteSession           port 6466: configure/set_active/ping, key inject, app-link launch
-  Discovery               Bonjour (_androidtvremote2._tcp + _googlecast._tcp) → IPv4
-Sources/atvctl/         macOS CLI over the same kit (used to prove everything against the TV)
-App/TVRemote/           SwiftUI app
-project.yml             XcodeGen spec → TVRemote.xcodeproj
-docs/DEEPLINKS.md       how each streaming app reacts to deep links
+Open it from the menu-bar TV icon or with **⌃⌥T**. Pair once with the code shown on the TV.
+
+**iPhone app** (Xcode 26+):
+```bash
+cp Config/Signing.xcconfig Config/Signing.local.xcconfig   # then set your DEVELOPMENT_TEAM + BUNDLE_ID_PREFIX
+xcodegen generate && open TVRemote.xcodeproj
 ```
+A free Apple ID works: use your "Personal Team". With free signing, the app must be re-installed
+every 7 days. On first launch, trust the profile on the phone (Settings → General → VPN & Device
+Management) and allow Local Network access.
 
-## Run the iOS app
-Xcode must be installed. This Mac only had the Command Line Tools on 2026-10-18.
-1. `xcodegen generate` (the generated `TVRemote.xcodeproj` is committed too) and open it in Xcode.
-2. Simulator: pick any iPhone and press Run. The Simulator shares the Mac's Wi-Fi, so it reaches the TV.
-3. iPhone with free signing: go to Signing & Capabilities, set Team to your Personal Team, then run on
-   the device. Trust the developer profile on the iPhone (Settings → General → VPN & Device
-   Management). Allow "Local Network" when prompted.
-4. In the app: tap Connect (default `192.168.1.128`) or a discovered TV, then Pair with TV, then type
-   the code shown on the TV.
-
-## Mac menu-bar widget (no Xcode needed)
-`scripts/build-mac-widget.sh` builds `Sources/TVRemoteBar` and installs `~/Applications/TV Remote.app`
-(ad-hoc signed, menu-bar only). The panel has power, the current app, mute, a volume slider (sent
-as volume key steps, since the protocol has no absolute volume), a D-pad, Back/Home/Play, and
-one-click tiles for Netflix, Prime, JioHotstar, YouTube, SonyLIV and Apple TV.
-**Search** (top field, or press `/` or ⌘F): looks the title up on JustWatch's India catalogue and
-lists which of your apps has it. Click an app chip and it opens on the TV. Prime and Apple TV
-may show their profile picker first; press OK and the title follows.
-Open it from the menu-bar TV icon, **⌃⌥T** anywhere, or by opening "TV Remote" again from
-Spotlight or Finder. The last two matter when a crowded menu bar hides the icon behind the notch;
-⌘-drag the icon to the right to keep it visible. Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
-It's a Login Item (System Settings → General → Login Items), and rebuilding keeps the same path,
-so the entry stays valid. It shares the Mac's Keychain identity with `atvctl`, so it's already paired. Design check without
-a screen: `TVRemoteBar --snapshot out.png` renders the panel with sample state.
-
-## CLI (macOS, no Xcode needed)
-```
+**CLI:**
+```bash
 swift build
 .build/debug/atvctl discover
-.build/debug/atvctl pair 192.168.1.128          # then type the TV code on stdin
-.build/debug/atvctl key 192.168.1.128 home right ok
-.build/debug/atvctl launch 192.168.1.128 https://www.netflix.com/title/80100172
-.build/debug/atvctl reset                        # delete the client identity (forces re-pair)
-ATV_DEBUG=1 …                                    # hex-dump pairing traffic
+.build/debug/atvctl pair <tv-ip>                 # type the code shown on the TV
+.build/debug/atvctl key <tv-ip> home right ok
+.build/debug/atvctl launch <tv-ip> "https://www.netflix.com/title/80057281?source=30"
 ```
 
-## Protocol gotchas found on the Acer R4
-- **The TV doesn't strictly verify the pairing secret against the presented cert.** If TLS presents
-  a different identity than the one you hashed, pairing still "succeeds" but port 6466 rejects you
-  with `bad certificate` (TV log: `AtvRemote.TcpClient: Incoming connection from unknown device`).
-  This bit us on macOS: the file-based login keychain ignores cert labels, and query-wide
-  `SecItemDelete` only removes the first match, so stale identities got mixed up. Fix: always take the
-  certificate *from the SecIdentity* you hand to TLS, and delete item by item.
-- **The TV dedupes paired certs by subject** (`KeyStoreManager: Deleting entry for … (CN=atvremote)`),
-  so each identity gets a unique CN, `atvremote-<random>`.
-- **Keys sent right after `remote_start` are dropped** (lost at 0 ms, delivered at 300 ms or later).
-  `RemoteSession.connect()` waits 500 ms before returning.
-- The TV doesn't advertise `_androidtvremote2._tcp`, so discovery also browses `_googlecast._tcp`.
-- The cert needs basicConstraints CA:TRUE and a SAN, the same as androidtvremote2's cert.
+## Credits
+- Protocol message layouts come from [tronikos/androidtvremote2](https://github.com/tronikos/androidtvremote2)
+  (Apache-2.0), the library behind Home Assistant's Android TV Remote integration. This is a
+  from-scratch Swift implementation, not a port of its code.
+- Title availability comes from [JustWatch](https://www.justwatch.com).
+- Built in an afternoon with [Claude Code](https://claude.com/claude-code).
+
+Not affiliated with Google, Netflix, Amazon, JioHotstar, Sony, Apple or JustWatch.
+
+## License
+MIT
