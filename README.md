@@ -1,4 +1,4 @@
-# Android TV remote: iPhone app, Mac menu-bar widget and cross-app search
+# Android TV remote: iPhone, Apple Watch and Mac menu-bar apps, with cross-app search
 
 Search for a title once, see which of your streaming apps has it, and open it on the TV.
 Netflix, Prime Video, JioHotstar, SonyLIV, Apple TV and YouTube all work, with no "open app → search
@@ -9,11 +9,16 @@ Google TV app uses. It's pure Swift with zero dependencies: protobuf is hand-rol
 certificate is generated on the device, and pairing uses the 6-character code the TV shows.
 
 <p align="center">
-  <img src="docs/screenshots/mac-search.png" width="270" alt="Mac widget: search across apps">
+  <img src="docs/screenshots/iphone-search.png" width="240" alt="iPhone: search across apps">
   &nbsp;
-  <img src="docs/screenshots/mac-widget.png" width="270" alt="Mac widget: remote">
+  <img src="docs/screenshots/mac-search.png" width="260" alt="Mac menu-bar widget: search">
   &nbsp;
-  <img src="docs/screenshots/iphone-search.png" width="250" alt="iPhone app: search across apps">
+  <img src="docs/screenshots/iphone-remote.png" width="240" alt="iPhone: remote">
+</p>
+<p align="center">
+  <img src="docs/screenshots/watch-remote.png" width="200" alt="Apple Watch remote">
+  &nbsp;
+  <img src="docs/screenshots/mac-widget.png" width="230" alt="Mac menu-bar widget: remote">
 </p>
 
 ## What's in here
@@ -21,7 +26,8 @@ certificate is generated on the device, and pairing uses the 6-character code th
 | | |
 |---|---|
 | **`ATVRemoteKit`** | The protocol, as a Swift package (iOS 16+ / macOS 14+). It covers pairing (port 6467), the remote (6466), Bonjour discovery and JustWatch search. |
-| **iPhone app** (`App/TVRemote`) | **Search across apps**: poster/title/year rows; tap an app to open the title on the TV. Plus the remote: D-pad, OK/Back/Home, volume, play/pause. |
+| **iPhone app** (`App/TVRemote`) | **Search across apps**: poster/title/year rows; tap an app to open the title on the TV. Plus the remote: D-pad, OK/Back/Home, volume, play/pause and app tiles. Same dark design as the Mac widget. |
+| **Apple Watch app** (`App/TVRemoteWatch`) | D-pad, Back/Home/Play, Digital Crown volume, app shortcuts and search. It sends commands through the iPhone (see below). |
 | **Mac menu-bar widget** (`Sources/TVRemoteBar`) | A dark popover remote with **search across apps**, keyboard control (arrows, Return, Esc) and a ⌃⌥T hotkey. It builds with just the Command Line Tools, no Xcode. |
 | **`atvctl`** | A CLI over the same kit: `pair`, `key`, `launch`, `discover`. Handy for poking at a TV. |
 
@@ -57,6 +63,10 @@ Per-app findings live in [`docs/DEEPLINKS.md`](docs/DEEPLINKS.md). The fun ones:
 - The client cert needs `basicConstraints CA:TRUE` and a SAN, the same as androidtvremote2's.
 - Some TVs don't advertise `_androidtvremote2._tcp`, so discovery also browses `_googlecast._tcp`.
 - There is no "set volume to N", only volume key steps. The widget's slider sends the difference.
+- **watchOS won't let a normal app open a raw TLS socket** (Apple TN3135 reserves that for audio
+  streaming and calls), so the watch app can't hold the TV connection itself. It searches JustWatch
+  over HTTPS and relays remote commands to the iPhone app over WatchConnectivity, which can wake the
+  phone app in the background.
 
 ## Build it
 
@@ -71,7 +81,8 @@ Open it from the menu-bar TV icon or with **⌃⌥T**. Pair once with the code s
 cp Config/Signing.xcconfig Config/Signing.local.xcconfig   # then set your DEVELOPMENT_TEAM + BUNDLE_ID_PREFIX
 xcodegen generate && open TVRemote.xcodeproj
 ```
-A free Apple ID works: use your "Personal Team". With free signing, the app must be re-installed
+The Watch app is embedded in the iPhone app and installs alongside it; the watch needs Developer Mode
+on. A free Apple ID works: use your "Personal Team". With free signing, the app must be re-installed
 every 7 days. On first launch, trust the profile on the phone (Settings → General → VPN & Device
 Management) and allow Local Network access.
 
