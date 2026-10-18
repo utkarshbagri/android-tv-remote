@@ -30,6 +30,15 @@ Xcode must be installed. This Mac only had the Command Line Tools on 2026-10-18.
 4. In the app: tap Connect (default `192.168.1.128`) or a discovered TV, then Pair with TV, then type
    the code shown on the TV.
 
+## Mac menu-bar widget (no Xcode needed)
+`scripts/build-mac-widget.sh` builds `Sources/TVRemoteBar` and installs `~/Applications/TV Remote.app`
+(ad-hoc signed, menu-bar only). The panel has power, the current app, mute, a volume slider (sent
+as volume key steps, since the protocol has no absolute volume), a D-pad, Back/Home/Play, and
+one-click tiles for Netflix, Prime, JioHotstar, YouTube, SonyLIV and Apple TV.
+Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
+It shares the Mac's Keychain identity with `atvctl`, so it's already paired. Design check without
+a screen: `TVRemoteBar --snapshot out.png` renders the panel with sample state.
+
 ## CLI (macOS, no Xcode needed)
 ```
 swift build
