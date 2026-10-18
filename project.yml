@@ -23,7 +23,7 @@ targets:
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
         # Free signing: set your Personal Team in Xcode (Signing & Capabilities) or here.
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: DN9QU9K4QQ
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: TV Remote

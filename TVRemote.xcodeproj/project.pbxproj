@@ -103,7 +103,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					CEB2E52F8C745D1CCEDABF57 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = DN9QU9K4QQ;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -151,7 +151,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DN9QU9K4QQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/TVRemote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Remote";
@@ -296,7 +296,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DN9QU9K4QQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/TVRemote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Remote";
