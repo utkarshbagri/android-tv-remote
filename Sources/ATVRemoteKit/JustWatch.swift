@@ -10,6 +10,12 @@ public enum JustWatch {
         public let url: String
         public let label: String       // Stream, Free, Ads, Rent, Buy
         public var id: String { app.id }
+
+        public init(app: StreamingApp, url: String, label: String) {
+            self.app = app
+            self.url = url
+            self.label = label
+        }
     }
 
     public struct Title: Identifiable {

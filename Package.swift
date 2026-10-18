@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ATVRemoteKit",
-    platforms: [.iOS(.v16), .macOS(.v14)],
+    platforms: [.iOS(.v16), .macOS(.v14), .watchOS(.v9)],
     products: [
         .library(name: "ATVRemoteKit", targets: ["ATVRemoteKit"]),
     ],

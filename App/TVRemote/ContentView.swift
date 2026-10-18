@@ -13,7 +13,7 @@ enum Palette {
 }
 
 struct ContentView: View {
-    @StateObject private var model = RemoteModel()
+    @ObservedObject private var model = RemoteModel.shared
     @Environment(\.scenePhase) private var scenePhase
     @State private var code = ""
     @State private var showSettings = false

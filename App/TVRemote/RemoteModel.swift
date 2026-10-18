@@ -4,6 +4,10 @@ import SwiftUI
 
 @MainActor
 final class RemoteModel: ObservableObject {
+    /// One model for the app's lifetime: the watch relay can wake the app in the background
+    /// before any view exists.
+    static let shared = RemoteModel()
+
     enum Phase: Equatable {
         case connecting, connected, needsPairing, awaitingCode, offline(String)
     }
@@ -40,7 +44,7 @@ final class RemoteModel: ObservableObject {
     var isConnected: Bool { phase == .connected }
     var currentAppName: String { appName(forPackage: currentPackage) }
 
-    init() {
+    private init() {
         discovery.onChange = { [weak self] found in
             Task { @MainActor in self?.discovered = found }
         }
@@ -169,6 +173,18 @@ final class RemoteModel: ObservableObject {
                 show("Opening \(pending.title)…")
             }
         }
+    }
+
+    /// Waits (briefly) for the TV connection, connecting if needed. For watch commands that may
+    /// arrive while the app was suspended and its socket dropped.
+    func connectedRemote(timeout: TimeInterval = 6) async -> Bool {
+        ensureConnected()
+        let deadline = Date().addingTimeInterval(timeout)
+        while phase != .connected, Date() < deadline {
+            if phase == .needsPairing { return false }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        return phase == .connected
     }
 
     /// Re-sends the last title link (for profiles picked with the TV's own remote).

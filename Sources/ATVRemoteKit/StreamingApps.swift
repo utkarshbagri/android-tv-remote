@@ -53,6 +53,7 @@ private let knownPackages: [String: String] = Dictionary(
     uniqueKeysWithValues: streamingApps.map { ($0.id, $0.name) } + [
         ("com.formulaone.production", "F1 TV"),
         ("com.gathin.tvhome", "Home"),
+        ("com.google.android.backdrop", "Screensaver"),
         ("com.google.android.youtube.tvmusic", "YouTube Music"),
     ])
 

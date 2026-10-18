@@ -7,23 +7,69 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1980B4E004A0FEF9DDBD2859 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BAA06D12D562320095ECE4D /* WatchMessage.swift */; };
+		3AAEA73361A6233B35106696 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D696F1D7A10CE4BADEA6FB26 /* WatchBridge.swift */; };
+		41F4293CE471EAB29821CC0F /* ATVRemoteKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4ADF9EDE3D6542F469FF9EF9 /* ATVRemoteKit */; };
 		43BCFFFABB6314B0F479A998 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9D09BF0F36E71D27A94A38 /* ContentView.swift */; };
 		4F6F27EB18FD9B0FF713D7AB /* TVRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A46E339FC62F654E112631 /* TVRemoteApp.swift */; };
 		5D3C53562AB24C1574C7966A /* ATVRemoteKit in Frameworks */ = {isa = PBXBuildFile; productRef = 131BBB43E66ACF595A550D41 /* ATVRemoteKit */; };
+		5E60C56299546BBE4A78CB64 /* WatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69854B29F2525BED291570C5 /* WatchModel.swift */; };
+		A2430180A69D763A472FCC96 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BAA06D12D562320095ECE4D /* WatchMessage.swift */; };
+		BF9154E24E7896A2CEC9658D /* TVRemoteWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7C5760824B37D1E17BF6FFCC /* TVRemoteWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C9A9561380902E19E48942D4 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B13F05E7D5DA1C66451CB5 /* WatchViews.swift */; };
 		E0B9FD700FED28F4B81B7283 /* RemoteModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4720A88F85E56CEADDC8A6CC /* RemoteModel.swift */; };
+		F419F07D2AAC775EF0965D59 /* TVRemoteWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694E9AB0BC40B0246E8E91DE /* TVRemoteWatchApp.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BED8D98D6EAAA385ED75798A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C6A84324EF563986EB3FF478 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 24A0B2651CBC2CA986E23E65;
+			remoteInfo = TVRemoteWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		ABD31981A8DFB5874C5BA4BE /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				BF9154E24E7896A2CEC9658D /* TVRemoteWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		06D69FE4D064C2B6E41C0BFC /* tv-remote-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tv-remote-ios"; path = .; sourceTree = SOURCE_ROOT; };
+		3BAA06D12D562320095ECE4D /* WatchMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMessage.swift; sourceTree = "<group>"; };
 		4720A88F85E56CEADDC8A6CC /* RemoteModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteModel.swift; sourceTree = "<group>"; };
 		4A925A32C00EA5E0EA005803 /* TVRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TVRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		694E9AB0BC40B0246E8E91DE /* TVRemoteWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVRemoteWatchApp.swift; sourceTree = "<group>"; };
+		69854B29F2525BED291570C5 /* WatchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModel.swift; sourceTree = "<group>"; };
+		7C5760824B37D1E17BF6FFCC /* TVRemoteWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TVRemoteWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94A46E339FC62F654E112631 /* TVRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVRemoteApp.swift; sourceTree = "<group>"; };
+		A0B13F05E7D5DA1C66451CB5 /* WatchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViews.swift; sourceTree = "<group>"; };
 		BF8188B45C432EDBDEA0E813 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C312E9C7FC9B612C7292F1D0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CE9D09BF0F36E71D27A94A38 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D696F1D7A10CE4BADEA6FB26 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3AA2B6D13C44E98D2641B017 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41F4293CE471EAB29821CC0F /* ATVRemoteKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		877F6194D39CA99633114BE3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -42,6 +88,7 @@
 				C312E9C7FC9B612C7292F1D0 /* Info.plist */,
 				4720A88F85E56CEADDC8A6CC /* RemoteModel.swift */,
 				94A46E339FC62F654E112631 /* TVRemoteApp.swift */,
+				D696F1D7A10CE4BADEA6FB26 /* WatchBridge.swift */,
 			);
 			name = TVRemote;
 			path = App/TVRemote;
@@ -59,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				4A925A32C00EA5E0EA005803 /* TVRemote.app */,
+				7C5760824B37D1E17BF6FFCC /* TVRemoteWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,24 +124,67 @@
 			children = (
 				4574926A122531D5CA2172CD /* Config */,
 				871155CF36B7CF094A07EA61 /* Packages */,
+				9D6CE2D2B88A8E07A438F33D /* Shared */,
 				094975E68A6DDA2334570010 /* TVRemote */,
+				A5DE1B38BB45641EACCDFC8A /* TVRemoteWatch */,
 				809CE646BA20C16430D38ACF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		9D6CE2D2B88A8E07A438F33D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				3BAA06D12D562320095ECE4D /* WatchMessage.swift */,
+			);
+			name = Shared;
+			path = App/Shared;
+			sourceTree = "<group>";
+		};
+		A5DE1B38BB45641EACCDFC8A /* TVRemoteWatch */ = {
+			isa = PBXGroup;
+			children = (
+				694E9AB0BC40B0246E8E91DE /* TVRemoteWatchApp.swift */,
+				69854B29F2525BED291570C5 /* WatchModel.swift */,
+				A0B13F05E7D5DA1C66451CB5 /* WatchViews.swift */,
+			);
+			name = TVRemoteWatch;
+			path = App/TVRemoteWatch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		24A0B2651CBC2CA986E23E65 /* TVRemoteWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32815DCFE53E43149247CDD4 /* Build configuration list for PBXNativeTarget "TVRemoteWatch" */;
+			buildPhases = (
+				02B462273C39D707FC2991C9 /* Sources */,
+				3AA2B6D13C44E98D2641B017 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TVRemoteWatch;
+			packageProductDependencies = (
+				4ADF9EDE3D6542F469FF9EF9 /* ATVRemoteKit */,
+			);
+			productName = TVRemoteWatch;
+			productReference = 7C5760824B37D1E17BF6FFCC /* TVRemoteWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		CEB2E52F8C745D1CCEDABF57 /* TVRemote */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9A4F6DA99C43D02BF69E2558 /* Build configuration list for PBXNativeTarget "TVRemote" */;
 			buildPhases = (
 				418807493ADF74E17B20D9AC /* Sources */,
 				877F6194D39CA99633114BE3 /* Frameworks */,
+				ABD31981A8DFB5874C5BA4BE /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A69EE05FD8C4856581BFDE6F /* PBXTargetDependency */,
 			);
 			name = TVRemote;
 			packageProductDependencies = (
@@ -112,6 +203,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					24A0B2651CBC2CA986E23E65 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					CEB2E52F8C745D1CCEDABF57 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -136,11 +231,23 @@
 			projectRoot = "";
 			targets = (
 				CEB2E52F8C745D1CCEDABF57 /* TVRemote */,
+				24A0B2651CBC2CA986E23E65 /* TVRemoteWatch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		02B462273C39D707FC2991C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F419F07D2AAC775EF0965D59 /* TVRemoteWatchApp.swift in Sources */,
+				1980B4E004A0FEF9DDBD2859 /* WatchMessage.swift in Sources */,
+				5E60C56299546BBE4A78CB64 /* WatchModel.swift in Sources */,
+				C9A9561380902E19E48942D4 /* WatchViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		418807493ADF74E17B20D9AC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -148,10 +255,20 @@
 				43BCFFFABB6314B0F479A998 /* ContentView.swift in Sources */,
 				E0B9FD700FED28F4B81B7283 /* RemoteModel.swift in Sources */,
 				4F6F27EB18FD9B0FF713D7AB /* TVRemoteApp.swift in Sources */,
+				3AAEA73361A6233B35106696 /* WatchBridge.swift in Sources */,
+				A2430180A69D763A472FCC96 /* WatchMessage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A69EE05FD8C4856581BFDE6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 24A0B2651CBC2CA986E23E65 /* TVRemoteWatch */;
+			targetProxy = BED8D98D6EAAA385ED75798A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2BEC5CDAED92E68D627E7844 /* Release */ = {
@@ -236,10 +353,50 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		490018AB768F7AC2A29DC3D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF8188B45C432EDBDEA0E813 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Remote";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(BUNDLE_ID_PREFIX).tvremote";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).tvremote.watchkitapp";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		CAD655A1255B504F3F7DEEC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF8188B45C432EDBDEA0E813 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Remote";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(BUNDLE_ID_PREFIX).tvremote";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).tvremote.watchkitapp";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Debug;
 		};
@@ -292,10 +449,10 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -337,6 +494,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		32815DCFE53E43149247CDD4 /* Build configuration list for PBXNativeTarget "TVRemoteWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAD655A1255B504F3F7DEEC6 /* Debug */,
+				490018AB768F7AC2A29DC3D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		9A4F6DA99C43D02BF69E2558 /* Build configuration list for PBXNativeTarget "TVRemote" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -357,6 +523,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		131BBB43E66ACF595A550D41 /* ATVRemoteKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ATVRemoteKit;
+		};
+		4ADF9EDE3D6542F469FF9EF9 /* ATVRemoteKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ATVRemoteKit;
 		};
