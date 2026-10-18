@@ -5,11 +5,14 @@ import SwiftUI
 /// Streaming apps we can open from the panel. Links are the "app home" URLs each TV app's intent
 /// filters claim (verified on the Acer R4, see docs/DEEPLINKS.md). F1 TV declares no deep links
 /// and can't be launched over the remote protocol, so it isn't here.
-struct StreamingApp: Identifiable {
+struct StreamingApp: Identifiable, Hashable {
     let id: String          // Android package
     let name: String
     let symbol: String
     let link: String
+
+    /// Compact label for result chips.
+    var shortName: String { name == "Prime Video" ? "Prime" : name }
 }
 
 let streamingApps: [StreamingApp] = [
@@ -50,6 +53,16 @@ final class BarModel: ObservableObject {
     @Published var volumeMax = 100
     @Published var muted = false
     @Published var isOn = true
+
+    // Search
+    @Published var searchText = "" {
+        didSet { scheduleSearch() }
+    }
+    @Published var results: [JustWatch.Title] = []
+    @Published var searching = false
+    @Published var searchError: String?
+    @Published var toast: String?
+    private var searchTask: Task<Void, Never>?
 
     private var remote: RemoteSession?
     private var pairing: PairingSession?
@@ -157,6 +170,49 @@ final class BarModel: ObservableObject {
 
     func open(_ app: StreamingApp) {
         remote?.launch(appLink: app.link)
+    }
+
+    /// Opens a title link (from search) on the TV.
+    func open(_ offer: JustWatch.Offer, title: String) {
+        guard let remote else { return }
+        remote.launch(appLink: offer.url)
+        show("Opening \(title) on \(offer.app.name)…")
+    }
+
+    private func show(_ message: String) {
+        toast = message
+        Task {
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            if toast == message { toast = nil }
+        }
+    }
+
+    /// Debounced JustWatch search as the user types.
+    private func scheduleSearch() {
+        searchTask?.cancel()
+        let text = searchText.trimmingCharacters(in: .whitespaces)
+        guard text.count >= 2 else {
+            results = []
+            searching = false
+            searchError = nil
+            return
+        }
+        searching = true
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled else { return }
+            do {
+                let found = try await JustWatch.search(text)
+                guard !Task.isCancelled else { return }
+                // Keep JustWatch's relevance order, but titles we can't open go last.
+                results = found.filter { !$0.offers.isEmpty } + found.filter { $0.offers.isEmpty }
+                searchError = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                searchError = "Search failed: \(error.localizedDescription)"
+            }
+            searching = false
+        }
     }
 
     /// The protocol has no "set volume", so step towards the target with volume keys.

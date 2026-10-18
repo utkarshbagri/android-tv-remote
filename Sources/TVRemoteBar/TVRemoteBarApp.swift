@@ -12,8 +12,14 @@ enum TVRemoteBarMain {
     static func main() {
         let args = CommandLine.arguments
         // `TVRemoteBar --snapshot out.png` renders the panel (offline, sample state) for design review.
+        // `--snapshot out.png "query"` renders the search results for that query instead.
         if let i = args.firstIndex(of: "--snapshot"), i + 1 < args.count {
-            MainActor.assumeIsolated { Snapshot.render(to: args[i + 1]) }
+            let query = i + 2 < args.count ? args[i + 2] : nil
+            Task { @MainActor in
+                await Snapshot.render(to: args[i + 1], query: query)
+                exit(0)
+            }
+            RunLoop.main.run()
             return
         }
         let app = NSApplication.shared
@@ -117,12 +123,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
 @MainActor
 enum Snapshot {
-    static func render(to path: String) {
+    static var active = false
+
+    static func render(to path: String, query: String? = nil) async {
+        active = true
         let model = BarModel(autoConnect: false)
         model.phase = .connected
         model.deviceName = "SCBC R4"
         model.currentPackage = "com.netflix.ninja"
         model.volume = 22
+        if let query {
+            model.searchText = query
+            model.results = (try? await JustWatch.search(query)) ?? []
+            model.searching = false
+            FileHandle.standardError.write(Data("results: \(model.results.count)\n".utf8))
+        }
         let renderer = ImageRenderer(content: PanelView(model: model))
         renderer.scale = 2
         guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,

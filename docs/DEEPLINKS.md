@@ -19,3 +19,11 @@ remote service fires `ACTION_VIEW` on the URI; whichever app's intent filter cla
 - JioHotstar: use `www.hotstar.com` links, never `jiohotstar.com`. Behaviour still needs checking by eye.
 - Profile pickers (Prime, Apple TV) interrupt but don't lose the link. The app could send OK about 6s after launching.
 - F1 TV is out unless we use ADB.
+
+## Search source: JustWatch (2026-10-18)
+`apis.justwatch.com/graphql` `popularTitles(country: IN)` → `offers.standardWebURL` gives TV-openable
+links for every installed app. Prime already comes as `app.primevideo.com/detail?gti=…`, Hotstar as
+`www.hotstar.com/in/<id>`, SonyLIV and Apple TV as episode URLs. All land on the title's page;
+Hotstar is not visually confirmed because its screen is secure. JustWatch's `deeplinkURL(platform:
+ANDROID_TV)` returns `intent://…` URIs, which the remote service rejects, so the widget filters
+offers by URL host instead.

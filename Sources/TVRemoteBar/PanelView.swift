@@ -16,6 +16,9 @@ struct PanelView: View {
     @State private var code = ""
     @State private var showSettings = false
     @FocusState private var focused: Bool
+    @FocusState private var searchFocused: Bool
+
+    private var isSearching: Bool { !model.searchText.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -24,10 +27,17 @@ struct PanelView: View {
             case .needsPairing, .awaitingCode:
                 pairingCard
             default:
-                nowPlaying
-                volumeRow
-                controls
-                appGrid
+                searchField
+                // Results overlay the remote (same footprint), so the panel never changes size.
+                VStack(alignment: .leading, spacing: 16) {
+                    nowPlaying
+                    volumeRow
+                    controls
+                    appGrid
+                }
+                .opacity(isSearching ? 0 : 1)
+                .allowsHitTesting(!isSearching)
+                .overlay { if isSearching { resultsList } }
             }
             if showSettings { settingsRow }
             footer
@@ -67,6 +77,110 @@ struct PanelView: View {
             .disabled(!model.isConnected)
             .help("Power")
         }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Palette.secondary)
+            TextField("Search movies & shows", text: $model.searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .focused($searchFocused)
+                .onKeyPress(.escape) {
+                    model.searchText = ""
+                    searchFocused = false
+                    focused = true
+                    return .handled
+                }
+            if model.searching {
+                ProgressView().controlSize(.small)
+            } else if isSearching {
+                Button { model.searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 38)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Palette.tile))
+        .overlay(RoundedRectangle(cornerRadius: 12)
+            .stroke(searchFocused ? Palette.accent.opacity(0.6) : Color.white.opacity(0.05)))
+    }
+
+    private var resultsList: some View {
+        // Snapshots render the rows without a ScrollView (ImageRenderer can't draw one).
+        Group {
+            if Snapshot.active {
+                resultRows.frame(maxHeight: .infinity, alignment: .top).clipped()
+            } else {
+                ScrollView { resultRows }.scrollIndicators(.never)
+            }
+        }
+        .background(Palette.panel)
+    }
+
+    private var resultRows: some View {
+            LazyVStack(alignment: .leading, spacing: 10) {
+                if let error = model.searchError {
+                    Text(error).font(.system(size: 12)).foregroundStyle(.orange)
+                } else if !model.searching && model.results.isEmpty && model.searchText.count >= 2 {
+                    Text("No matches").font(.system(size: 12)).foregroundStyle(Palette.secondary)
+                }
+                ForEach(model.results) { title in
+                    resultRow(title)
+                }
+            }
+    }
+
+    private func resultRow(_ title: JustWatch.Title) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            AsyncImage(url: title.poster) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Palette.tileHi
+            }
+            .frame(width: 46, height: 68)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(2)
+                Text([title.year.map(String.init), title.isShow ? "Show" : "Movie"]
+                        .compactMap { $0 }.joined(separator: " · "))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Palette.secondary)
+                if title.offers.isEmpty {
+                    Text("Not on your apps")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.secondary.opacity(0.7))
+                } else {
+                    HStack(spacing: 6) {
+                        ForEach(title.offers.prefix(3)) { offer in
+                            Button { model.open(offer, title: title.name) } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "play.fill").font(.system(size: 8))
+                                    Text(offer.app.shortName).font(.system(size: 11, weight: .semibold))
+                                    if offer.label != "Stream" {
+                                        Text(offer.label).font(.system(size: 10))
+                                            .foregroundStyle(Palette.secondary)
+                                    }
+                                }
+                                .padding(.horizontal, 8)
+                                .frame(height: 24)
+                                .background(Capsule().fill(Palette.accent.opacity(0.18)))
+                                .overlay(Capsule().stroke(Palette.accent.opacity(0.45)))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!model.isConnected)
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Palette.tile))
     }
 
     private var nowPlaying: some View {
@@ -194,6 +308,9 @@ struct PanelView: View {
     private var footer: some View {
         HStack(spacing: 6) {
             switch model.phase {
+            case .connected where model.toast != nil:
+                Image(systemName: "play.tv").foregroundStyle(Palette.accent)
+                Text(model.toast ?? "").lineLimit(1)
             case .connected:
                 Circle().fill(Color.green.opacity(0.8)).frame(width: 6, height: 6)
                 Text("Connected · \(model.host)")
@@ -262,9 +379,14 @@ struct PanelView: View {
         code = ""
     }
 
-    /// Arrow keys = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
+    /// Arrow keys = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home,
+    /// "/" or ⌘F = search. Ignored while typing in the search field.
     private func handleKey(_ press: KeyPress) -> KeyPress.Result {
-        guard model.isConnected else { return .ignored }
+        guard model.isConnected, !searchFocused else { return .ignored }
+        if press.key == KeyEquivalent("/") || (press.key == KeyEquivalent("f") && press.modifiers.contains(.command)) {
+            searchFocused = true
+            return .handled
+        }
         let map: [KeyEquivalent: KeyCode] = [
             .upArrow: .dpadUp, .downArrow: .dpadDown, .leftArrow: .dpadLeft, .rightArrow: .dpadRight,
             .return: .dpadCenter, .escape: .back, .delete: .back, .space: .playPause,

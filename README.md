@@ -35,6 +35,9 @@ Xcode must be installed. This Mac only had the Command Line Tools on 2026-10-18.
 (ad-hoc signed, menu-bar only). The panel has power, the current app, mute, a volume slider (sent
 as volume key steps, since the protocol has no absolute volume), a D-pad, Back/Home/Play, and
 one-click tiles for Netflix, Prime, JioHotstar, YouTube, SonyLIV and Apple TV.
+**Search** (top field, or press `/` or ⌘F): looks the title up on JustWatch's India catalogue and
+lists which of your apps has it. Click an app chip and it opens on the TV. Prime and Apple TV
+may show their profile picker first; press OK and the title follows.
 Open it from the menu-bar TV icon, **⌃⌥T** anywhere, or by opening "TV Remote" again from
 Spotlight or Finder. The last two matter when a crowded menu bar hides the icon behind the notch;
 ⌘-drag the icon to the right to keep it visible. Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
