@@ -9,7 +9,7 @@ struct ContentView: View {
 
     /// Deep links to try. Forms follow what each TV app's intent filters claim (docs/DEEPLINKS.md).
     private let presets: [(String, String)] = [
-        ("Netflix · title 80100172", "https://www.netflix.com/title/80100172"),
+        ("Netflix · title 80100172", "https://www.netflix.com/title/80100172?source=30"),
         ("Prime Video · The Family Man", "https://app.primevideo.com/detail?gti=amzn1.dv.gti.f6b66cba-48c8-b5ac-83e8-844e3cce6bf6"),
         ("SonyLIV · Scam 1992", "https://www.sonyliv.com/shows/scam-1992-the-harshad-mehta--1700000292"),
         ("Apple TV · Ted Lasso", "https://tv.apple.com/in/show/ted-lasso/umc.cmc.vtoh0mn0xn7t3c643xqonfzy"),

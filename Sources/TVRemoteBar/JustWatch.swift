@@ -68,7 +68,7 @@ enum JustWatch {
                       let pkg = appForHost[host], let app = apps[pkg] else { continue }
                 let r = rank[o.monetizationType] ?? 9
                 if let current = best[pkg], current.rank <= r { continue }
-                best[pkg] = (r, Offer(app: app, url: o.standardWebURL,
+                best[pkg] = (r, Offer(app: app, url: tvLink(o.standardWebURL, host: host),
                                       label: labels[o.monetizationType] ?? o.monetizationType.capitalized))
             }
             let offers = best.values.sorted { $0.rank < $1.rank }.map(\.offer)
@@ -80,6 +80,14 @@ enum JustWatch {
             return Title(id: node.id, name: node.content.title, year: node.content.originalReleaseYear,
                          isShow: node.objectType == "SHOW", poster: poster, offers: offers)
         }
+    }
+
+    /// Netflix's TV app ignores deep links unless they carry `source=30`. The usual route is an
+    /// intent extra, but the remote service sends a bare VIEW intent, so it has to go in the URL
+    /// (confirmed on the R4: the plain title link stays on Home, `?source=30` opens the title).
+    static func tvLink(_ url: String, host: String) -> String {
+        guard host == "www.netflix.com", !url.contains("source=") else { return url }
+        return url + (url.contains("?") ? "&" : "?") + "source=30"
     }
 
     private struct Response: Decodable {
