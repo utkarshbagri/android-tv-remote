@@ -157,7 +157,13 @@ struct PanelView: View {
                 } else {
                     HStack(spacing: 6) {
                         ForEach(title.offers.prefix(3)) { offer in
-                            Button { model.open(offer, title: title.name) } label: {
+                            Button {
+                                model.open(offer, title: title.name)
+                                // Back to the remote so a profile picker is one OK away.
+                                model.searchText = ""
+                                searchFocused = false
+                                focused = true
+                            } label: {
                                 HStack(spacing: 4) {
                                     Image(systemName: "play.fill").font(.system(size: 8))
                                     Text(offer.app.shortName).font(.system(size: 11, weight: .semibold))
@@ -308,7 +314,7 @@ struct PanelView: View {
     private var footer: some View {
         HStack(spacing: 6) {
             switch model.phase {
-            case .connected where model.pendingRelaunch != nil && model.toast == nil:
+            case .connected where model.pendingRelaunch != nil:
                 Text("Picked a Netflix profile?").lineLimit(1)
                 Button("Open title again") { model.relaunchPending() }
                     .buttonStyle(.plain)
