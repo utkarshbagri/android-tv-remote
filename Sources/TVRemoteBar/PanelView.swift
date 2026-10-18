@@ -315,7 +315,7 @@ struct PanelView: View {
         HStack(spacing: 6) {
             switch model.phase {
             case .connected where model.pendingRelaunch != nil:
-                Text("Picked a Netflix profile?").lineLimit(1)
+                Text("Picked a \(model.pendingRelaunch?.appName ?? "") profile?").lineLimit(1)
                 Button("Open title again") { model.relaunchPending() }
                     .buttonStyle(.plain)
                     .foregroundStyle(Palette.accent)

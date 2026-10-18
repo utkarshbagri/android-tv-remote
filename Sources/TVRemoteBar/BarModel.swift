@@ -67,7 +67,12 @@ final class BarModel: ObservableObject {
     struct PendingLink: Equatable {
         let url: String
         let title: String
+        let appName: String
     }
+
+    static let profileGatedApps: Set<String> = [
+        "com.netflix.ninja", "com.apple.atve.androidtv.appletv", "com.amazon.amazonvideo.livingroom",
+    ]
     private var searchTask: Task<Void, Never>?
 
     private var remote: RemoteSession?
@@ -172,7 +177,7 @@ final class BarModel: ObservableObject {
 
     func press(_ key: KeyCode) {
         remote?.sendKey(key)
-        // OK on Netflix's "Who's watching?" screen: the cold start dropped the deep link, so
+        // OK on a "Who's watching?" screen: the cold start may have dropped the deep link, so
         // send it again once the profile has loaded.
         if key == .dpadCenter, let pending = pendingRelaunch {
             pendingRelaunch = nil
@@ -201,10 +206,11 @@ final class BarModel: ObservableObject {
         guard let remote else { return }
         remote.launch(appLink: offer.url)
         show("Opening \(title) on \(offer.app.name)…")
-        // Netflix drops deep links when it cold-starts into the profile picker (observed on the
-        // R4); Prime and Apple TV carry the link through their pickers. Offer a re-send for 90s.
-        if offer.app.id == "com.netflix.ninja" {
-            let pending = PendingLink(url: offer.url, title: title)
+        // Apps with a "Who's watching?" picker can drop the deep link on a cold start (Netflix and
+        // Apple TV, reported by the user), so offer a re-send for 90s. Re-sending once the
+        // title page is already showing is harmless.
+        if Self.profileGatedApps.contains(offer.app.id) {
+            let pending = PendingLink(url: offer.url, title: title, appName: offer.app.shortName)
             pendingRelaunch = pending
             Task {
                 try? await Task.sleep(nanoseconds: 90_000_000_000)
