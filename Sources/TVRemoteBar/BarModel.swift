@@ -2,34 +2,6 @@ import ATVRemoteKit
 import Foundation
 import SwiftUI
 
-/// Streaming apps we can open from the panel. Links are the "app home" URLs each TV app's intent
-/// filters claim (verified on the Acer R4, see docs/DEEPLINKS.md). F1 TV declares no deep links
-/// and can't be launched over the remote protocol, so it isn't here.
-struct StreamingApp: Identifiable, Hashable {
-    let id: String          // Android package
-    let name: String
-    let symbol: String
-    let link: String
-
-    /// Compact label for result chips.
-    var shortName: String { name == "Prime Video" ? "Prime" : name }
-}
-
-let streamingApps: [StreamingApp] = [
-    .init(id: "com.netflix.ninja", name: "Netflix", symbol: "n.square.fill",
-          link: "https://www.netflix.com/browse"),
-    .init(id: "com.amazon.amazonvideo.livingroom", name: "Prime Video", symbol: "play.square.fill",
-          link: "https://app.primevideo.com/"),
-    .init(id: "in.startv.hotstar", name: "JioHotstar", symbol: "star.square.fill",
-          link: "https://www.hotstar.com/in/home"),
-    .init(id: "com.google.android.youtube.tv", name: "YouTube", symbol: "play.rectangle.fill",
-          link: "https://www.youtube.com/"),
-    .init(id: "com.sonyliv", name: "SonyLIV", symbol: "s.square.fill",
-          link: "https://www.sonyliv.com/"),
-    .init(id: "com.apple.atve.androidtv.appletv", name: "Apple TV", symbol: "appletv.fill",
-          link: "https://tv.apple.com/"),
-]
-
 private let knownPackages: [String: String] = Dictionary(
     uniqueKeysWithValues: streamingApps.map { ($0.id, $0.name) } + [
         ("com.formulaone.production", "F1 TV"),
@@ -64,15 +36,6 @@ final class BarModel: ObservableObject {
     @Published var toast: String?
     @Published var pendingRelaunch: PendingLink?
 
-    struct PendingLink: Equatable {
-        let url: String
-        let title: String
-        let appName: String
-    }
-
-    static let profileGatedApps: Set<String> = [
-        "com.netflix.ninja", "com.apple.atve.androidtv.appletv", "com.amazon.amazonvideo.livingroom",
-    ]
     private var searchTask: Task<Void, Never>?
 
     private var remote: RemoteSession?
@@ -182,7 +145,7 @@ final class BarModel: ObservableObject {
         if key == .dpadCenter, let pending = pendingRelaunch {
             pendingRelaunch = nil
             Task {
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                try? await Task.sleep(nanoseconds: PendingLink.resendDelay)
                 remote?.launch(appLink: pending.url)
                 show("Opening \(pending.title)…")
             }
@@ -206,14 +169,10 @@ final class BarModel: ObservableObject {
         guard let remote else { return }
         remote.launch(appLink: offer.url)
         show("Opening \(title) on \(offer.app.name)…")
-        // Apps with a "Who's watching?" picker can drop the deep link on a cold start (Netflix and
-        // Apple TV, reported by the user), so offer a re-send for 90s. Re-sending once the
-        // title page is already showing is harmless.
-        if Self.profileGatedApps.contains(offer.app.id) {
-            let pending = PendingLink(url: offer.url, title: title, appName: offer.app.shortName)
+        if let pending = PendingLink(offer: offer, title: title) {
             pendingRelaunch = pending
             Task {
-                try? await Task.sleep(nanoseconds: 90_000_000_000)
+                try? await Task.sleep(nanoseconds: PendingLink.promptWindow)
                 if pendingRelaunch == pending { pendingRelaunch = nil }
             }
         }
@@ -244,8 +203,7 @@ final class BarModel: ObservableObject {
             do {
                 let found = try await JustWatch.search(text)
                 guard !Task.isCancelled else { return }
-                // Keep JustWatch's relevance order, but titles we can't open go last.
-                results = found.filter { !$0.offers.isEmpty } + found.filter { $0.offers.isEmpty }
+                results = found
                 searchError = nil
             } catch {
                 guard !Task.isCancelled else { return }

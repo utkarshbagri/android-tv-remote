@@ -6,6 +6,9 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var code = ""
     @State private var customLink = ""
+    @FocusState private var searchFocused: Bool
+
+    private var isSearching: Bool { !model.searchText.isEmpty }
 
     /// Deep links to try. Forms follow what each TV app's intent filters claim (docs/DEEPLINKS.md).
     private let presets: [(String, String)] = [
@@ -19,6 +22,8 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
+            // The remote stays mounted under the results so typing never swaps the view tree
+            // (which would drop the search field's focus mid-word).
             Form {
                 connectionSection
                 if model.phase == .connected {
@@ -27,7 +32,13 @@ struct ContentView: View {
                 }
                 logSection
             }
+            .opacity(isSearching ? 0 : 1)
+            .allowsHitTesting(!isSearching)
+            .overlay { if isSearching { resultsList } }
+            .safeAreaInset(edge: .top, spacing: 0) { searchBar }
+            .safeAreaInset(edge: .bottom, spacing: 0) { statusBanner }
             .navigationTitle(model.deviceName.isEmpty ? "TV Remote" : model.deviceName)
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: .constant(model.phase == .awaitingCode)) { pairingSheet }
         }
         .onAppear {
@@ -38,6 +49,130 @@ struct ContentView: View {
             if phase == .active, model.phase == .disconnected { model.connect() }
         }
     }
+
+    // MARK: Search
+
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Search movies & shows", text: $model.searchText)
+                    .focused($searchFocused)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+                    .onSubmit { searchFocused = false }
+                if model.searching {
+                    ProgressView()
+                } else if isSearching {
+                    Button { model.searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 38)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
+            if searchFocused || isSearching {
+                Button("Cancel") {
+                    model.searchText = ""
+                    searchFocused = false
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    private var resultsList: some View {
+        List {
+            if let error = model.searchError {
+                Text(error).foregroundStyle(.orange)
+            } else if !model.searching && model.results.isEmpty && model.searchText.count >= 2 {
+                Text("No matches").foregroundStyle(.secondary)
+            }
+            ForEach(model.results) { title in
+                resultRow(title)
+            }
+        }
+        .listStyle(.plain)
+        .scrollDismissesKeyboard(.immediately)
+    }
+
+    private func resultRow(_ title: JustWatch.Title) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            AsyncImage(url: title.poster) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Color(.secondarySystemFill)
+            }
+            .frame(width: 54, height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title.name).font(.headline).lineLimit(2)
+                Text([title.year.map(String.init), title.isShow ? "Show" : "Movie"]
+                        .compactMap { $0 }.joined(separator: " · "))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if title.offers.isEmpty {
+                    Text("Not on your apps").font(.footnote).foregroundStyle(.tertiary)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(title.offers) { offer in chip(offer, title: title.name) }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func chip(_ offer: JustWatch.Offer, title: String) -> some View {
+        Button {
+            model.open(offer, title: title)
+            // Back to the remote so a profile picker is one OK away.
+            model.searchText = ""
+            searchFocused = false
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "play.fill").font(.caption2)
+                Text(offer.app.shortName).font(.subheadline.weight(.semibold))
+                if offer.label != "Stream" {
+                    Text(offer.label).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .disabled(model.phase != .connected)
+    }
+
+    /// "Open title again" after a profile-gated launch, otherwise the last toast.
+    @ViewBuilder private var statusBanner: some View {
+        if let pending = model.pendingRelaunch, model.phase == .connected {
+            HStack {
+                Text("Picked a \(pending.appName) profile?").font(.subheadline)
+                Spacer()
+                Button("Open title again") { model.relaunchPending() }
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .background(.bar)
+        } else if let toast = model.toast {
+            Label(toast, systemImage: "play.tv")
+                .font(.subheadline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(.bar)
+        }
+    }
+
+    // MARK: Remote
 
     private var connectionSection: some View {
         Section {

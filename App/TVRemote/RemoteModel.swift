@@ -22,6 +22,17 @@ final class RemoteModel: ObservableObject {
     @Published var volume = ""
     @Published var log: [String] = []
 
+    // Search
+    @Published var searchText = "" {
+        didSet { if searchText != oldValue { scheduleSearch() } }
+    }
+    @Published var results: [JustWatch.Title] = []
+    @Published var searching = false
+    @Published var searchError: String?
+    @Published var toast: String?
+    @Published var pendingRelaunch: PendingLink?
+    private var searchTask: Task<Void, Never>?
+
     private var remote: RemoteSession?
     private var pairing: PairingSession?
     private let discovery = TVDiscovery()
@@ -117,6 +128,74 @@ final class RemoteModel: ObservableObject {
 
     func press(_ key: KeyCode) {
         remote?.sendKey(key)
+        // OK on a "Who's watching?" screen: the cold start may have dropped the deep link, so
+        // send it again once the profile has loaded.
+        if key == .dpadCenter, let pending = pendingRelaunch {
+            pendingRelaunch = nil
+            Task {
+                try? await Task.sleep(nanoseconds: PendingLink.resendDelay)
+                remote?.launch(appLink: pending.url)
+                show("Opening \(pending.title)…")
+            }
+        }
+    }
+
+    /// Re-sends the last title link (for profiles picked with the TV's own remote).
+    func relaunchPending() {
+        guard let pending = pendingRelaunch, let remote else { return }
+        pendingRelaunch = nil
+        remote.launch(appLink: pending.url)
+        show("Opening \(pending.title)…")
+    }
+
+    /// Opens a search result on the TV.
+    func open(_ offer: JustWatch.Offer, title: String) {
+        guard let remote else { return }
+        remote.launch(appLink: offer.url)
+        note("Opened \(offer.url)")
+        show("Opening \(title) on \(offer.app.name)…")
+        if let pending = PendingLink(offer: offer, title: title) {
+            pendingRelaunch = pending
+            Task {
+                try? await Task.sleep(nanoseconds: PendingLink.promptWindow)
+                if pendingRelaunch == pending { pendingRelaunch = nil }
+            }
+        }
+    }
+
+    private func show(_ message: String) {
+        toast = message
+        Task {
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            if toast == message { toast = nil }
+        }
+    }
+
+    /// Debounced JustWatch search as the user types.
+    private func scheduleSearch() {
+        searchTask?.cancel()
+        let text = searchText.trimmingCharacters(in: .whitespaces)
+        guard text.count >= 2 else {
+            results = []
+            searching = false
+            searchError = nil
+            return
+        }
+        searching = true
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled else { return }
+            do {
+                let found = try await JustWatch.search(text)
+                guard !Task.isCancelled else { return }
+                results = found
+                searchError = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                searchError = "Search failed: \(error.localizedDescription)"
+            }
+            searching = false
+        }
     }
 
     func open(_ link: String) {

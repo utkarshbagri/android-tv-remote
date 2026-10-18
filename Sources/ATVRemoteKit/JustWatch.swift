@@ -4,21 +4,21 @@ import Foundation
 /// Each result carries one TV-openable link per streaming app. We keep offers whose URL host is
 /// one the TV apps' intent filters claim (docs/DEEPLINKS.md); JustWatch's own ANDROID_TV
 /// deeplinks are `intent://` URIs, which the remote service rejects, so we use standardWebURL.
-enum JustWatch {
-    struct Offer: Identifiable, Hashable {
-        let app: StreamingApp
-        let url: String
-        let label: String       // Stream, Free, Ads, Rent, Buy
-        var id: String { app.id }
+public enum JustWatch {
+    public struct Offer: Identifiable, Hashable {
+        public let app: StreamingApp
+        public let url: String
+        public let label: String       // Stream, Free, Ads, Rent, Buy
+        public var id: String { app.id }
     }
 
-    struct Title: Identifiable {
-        let id: String
-        let name: String
-        let year: Int?
-        let isShow: Bool
-        let poster: URL?
-        let offers: [Offer]
+    public struct Title: Identifiable {
+        public let id: String
+        public let name: String
+        public let year: Int?
+        public let isShow: Bool
+        public let poster: URL?
+        public let offers: [Offer]
     }
 
     /// URL host → the installed TV app that opens it.
@@ -45,7 +45,7 @@ enum JustWatch {
     }
     """
 
-    static func search(_ text: String, country: String = "IN") async throws -> [Title] {
+    public static func search(_ text: String, country: String = "IN") async throws -> [Title] {
         var request = URLRequest(url: URL(string: "https://apis.justwatch.com/graphql")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -59,7 +59,7 @@ enum JustWatch {
         let decoded = try JSONDecoder().decode(Response.self, from: data)
         let apps = Dictionary(uniqueKeysWithValues: streamingApps.map { ($0.id, $0) })
 
-        return decoded.data.popularTitles.edges.map { edge in
+        let titles = decoded.data.popularTitles.edges.map { edge in
             let node = edge.node
             // Best offer per app: subscription beats free beats ads beats rent/buy.
             var best: [String: (rank: Int, offer: Offer)] = [:]
@@ -81,12 +81,14 @@ enum JustWatch {
             return Title(id: node.id, name: node.content.title, year: node.content.originalReleaseYear,
                          isShow: node.objectType == "SHOW", poster: poster, offers: offers)
         }
+        // Keep JustWatch's relevance order, but titles we can't open go last.
+        return titles.filter { !$0.offers.isEmpty } + titles.filter { $0.offers.isEmpty }
     }
 
     /// Some offers link to a store front, not the title. E.g. Raanjhanaa's Apple TV "Eros Now"
     /// channel offer is just `https://tv.apple.com/in`, which drops you on Apple TV's home.
     /// A title link has more in its path than a country code.
-    static func isTitleLink(_ url: URL) -> Bool {
+    public static func isTitleLink(_ url: URL) -> Bool {
         let parts = url.path.split(separator: "/")
         return !(parts.isEmpty || (parts.count == 1 && parts[0].count == 2))
     }
@@ -94,7 +96,7 @@ enum JustWatch {
     /// Netflix's TV app ignores deep links unless they carry `source=30`. The usual route is an
     /// intent extra, but the remote service sends a bare VIEW intent, so it has to go in the URL
     /// (confirmed on the R4: the plain title link stays on Home, `?source=30` opens the title).
-    static func tvLink(_ url: String, host: String) -> String {
+    public static func tvLink(_ url: String, host: String) -> String {
         guard host == "www.netflix.com", !url.contains("source=") else { return url }
         return url + (url.contains("?") ? "&" : "?") + "source=30"
     }
