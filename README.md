@@ -38,7 +38,8 @@ one-click tiles for Netflix, Prime, JioHotstar, YouTube, SonyLIV and Apple TV.
 Open it from the menu-bar TV icon, **⌃⌥T** anywhere, or by opening "TV Remote" again from
 Spotlight or Finder. The last two matter when a crowded menu bar hides the icon behind the notch;
 ⌘-drag the icon to the right to keep it visible. Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
-It shares the Mac's Keychain identity with `atvctl`, so it's already paired. Design check without
+It's a Login Item (System Settings → General → Login Items), and rebuilding keeps the same path,
+so the entry stays valid. It shares the Mac's Keychain identity with `atvctl`, so it's already paired. Design check without
 a screen: `TVRemoteBar --snapshot out.png` renders the panel with sample state.
 
 ## CLI (macOS, no Xcode needed)
