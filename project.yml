@@ -1,0 +1,37 @@
+# Generate the Xcode project with:  xcodegen generate
+name: TVRemote
+options:
+  bundleIdPrefix: co.ubrain
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  ATVRemoteKit:
+    path: .
+targets:
+  TVRemote:
+    type: application
+    platform: iOS
+    sources: [App/TVRemote]
+    dependencies:
+      - package: ATVRemoteKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.ubrain.tvremote
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        # Free signing: set your Personal Team in Xcode (Signing & Capabilities) or here.
+        DEVELOPMENT_TEAM: ""
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: TV Remote
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: "Finds and controls your Android TV on the local network."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+    info:
+      path: App/TVRemote/Info.plist
+      properties:
+        NSBonjourServices:
+          - _androidtvremote2._tcp
+          - _googlecast._tcp
