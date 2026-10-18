@@ -2,13 +2,6 @@ import ATVRemoteKit
 import Foundation
 import SwiftUI
 
-private let knownPackages: [String: String] = Dictionary(
-    uniqueKeysWithValues: streamingApps.map { ($0.id, $0.name) } + [
-        ("com.formulaone.production", "F1 TV"),
-        ("com.gathin.tvhome", "Home"),
-        ("com.google.android.youtube.tvmusic", "YouTube Music"),
-    ])
-
 @MainActor
 final class BarModel: ObservableObject {
     enum Phase: Equatable {
@@ -49,8 +42,7 @@ final class BarModel: ObservableObject {
     }
 
     var currentAppName: String {
-        if currentPackage.isEmpty { return "—" }
-        return knownPackages[currentPackage] ?? currentPackage.components(separatedBy: ".").last ?? currentPackage
+        appName(forPackage: currentPackage)
     }
 
     var isConnected: Bool { phase == .connected }

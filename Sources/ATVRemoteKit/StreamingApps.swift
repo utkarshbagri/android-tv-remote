@@ -43,6 +43,19 @@ public let streamingApps: [StreamingApp] = [
           link: "https://tv.apple.com/"),
 ]
 
+/// Friendly name for the TV's foreground package ("Now on" readouts).
+public func appName(forPackage pkg: String) -> String {
+    if pkg.isEmpty { return "—" }
+    return knownPackages[pkg] ?? pkg.components(separatedBy: ".").last ?? pkg
+}
+
+private let knownPackages: [String: String] = Dictionary(
+    uniqueKeysWithValues: streamingApps.map { ($0.id, $0.name) } + [
+        ("com.formulaone.production", "F1 TV"),
+        ("com.gathin.tvhome", "Home"),
+        ("com.google.android.youtube.tvmusic", "YouTube Music"),
+    ])
+
 /// A title link sent to a profile-gated app, kept so it can be re-sent once a profile is picked:
 /// automatically `resendDelay` after the next OK, or from an "Open title again" prompt shown for
 /// `promptWindow`. Re-sending once the title page is already showing is harmless.

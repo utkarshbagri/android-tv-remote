@@ -5,21 +5,19 @@ import SwiftUI
 @MainActor
 final class RemoteModel: ObservableObject {
     enum Phase: Equatable {
-        case disconnected
-        case connecting
-        case needsPairing
-        case awaitingCode
-        case connected
+        case connecting, connected, needsPairing, awaitingCode, offline(String)
     }
 
-    @Published var phase: Phase = .disconnected
+    @Published var phase: Phase = .connecting
     @Published var host: String = UserDefaults.standard.string(forKey: "host") ?? "192.168.1.128" {
         didSet { UserDefaults.standard.set(host, forKey: "host") }
     }
     @Published var discovered: [TVDiscovery.Found] = []
-    @Published var deviceName = ""
-    @Published var currentApp = ""
-    @Published var volume = ""
+    @Published var deviceName = "Android TV"
+    @Published var currentPackage = ""
+    @Published var volume = 0
+    @Published var volumeMax = 100
+    @Published var muted = false
     @Published var log: [String] = []
 
     // Search
@@ -36,6 +34,11 @@ final class RemoteModel: ObservableObject {
     private var remote: RemoteSession?
     private var pairing: PairingSession?
     private let discovery = TVDiscovery()
+    private var retryDelay: UInt64 = 2
+    private var connectTask: Task<Void, Never>?
+
+    var isConnected: Bool { phase == .connected }
+    var currentAppName: String { appName(forPackage: currentPackage) }
 
     init() {
         discovery.onChange = { [weak self] found in
@@ -57,10 +60,22 @@ final class RemoteModel: ObservableObject {
         }
     }
 
+    /// Connects unless already connected/connecting (app launch, back to foreground).
+    func ensureConnected() {
+        switch phase {
+        case .connected, .awaitingCode: return
+        case .connecting where connectTask != nil: return
+        default: connect()
+        }
+    }
+
     func connect() {
+        connectTask?.cancel()
         remote?.disconnect()
+        remote = nil
         phase = .connecting
-        Task {
+        connectTask = Task {
+            defer { connectTask = nil }
             do {
                 let identity = try ClientIdentity.loadOrCreate()
                 let session = RemoteSession(host: host, identity: identity)
@@ -70,12 +85,28 @@ final class RemoteModel: ObservableObject {
                 try await session.connect()
                 remote = session
                 phase = .connected
+                retryDelay = 2
                 note("Connected to \(host)")
             } catch {
+                let message = error.localizedDescription
+                note("Connect failed: \(message)")
                 // An unpaired client cert is rejected during/just after the TLS handshake.
-                note("Connect failed: \(error.localizedDescription)")
-                phase = .needsPairing
+                if message.contains("certificate") || message.contains("not paired") {
+                    phase = .needsPairing
+                } else {
+                    phase = .offline(message)
+                    scheduleRetry()
+                }
             }
+        }
+    }
+
+    private func scheduleRetry() {
+        let delay = retryDelay
+        retryDelay = min(retryDelay * 2, 30)
+        Task {
+            try? await Task.sleep(nanoseconds: delay * 1_000_000_000)
+            if case .offline = phase { connect() }
         }
     }
 
@@ -90,7 +121,7 @@ final class RemoteModel: ObservableObject {
                 note("Enter the code shown on the TV")
             } catch {
                 note("Pairing failed: \(error.localizedDescription)")
-                phase = .needsPairing
+                phase = .offline("Pairing: \(error.localizedDescription)")
             }
         }
     }
@@ -198,6 +229,23 @@ final class RemoteModel: ObservableObject {
         }
     }
 
+    func open(_ app: StreamingApp) {
+        remote?.launch(appLink: app.link)
+    }
+
+    /// The protocol has no "set volume", so step towards the target with volume keys.
+    func setVolume(_ target: Int) {
+        let delta = target - volume
+        guard delta != 0, let remote else { return }
+        let key: KeyCode = delta > 0 ? .volumeUp : .volumeDown
+        Task {
+            for _ in 0..<min(abs(delta), 50) {
+                remote.sendKey(key)
+                try? await Task.sleep(nanoseconds: 40_000_000)
+            }
+        }
+    }
+
     func open(_ link: String) {
         guard let remote else { return }
         remote.launch(appLink: link)
@@ -206,17 +254,21 @@ final class RemoteModel: ObservableObject {
 
     private func handle(_ event: RemoteEvent, from session: RemoteSession) {
         switch event {
-        case let .ready(model, vendor): deviceName = "\(vendor) \(model)"
-        case let .currentApp(pkg): currentApp = pkg
-        case let .volume(level, max, muted): volume = muted ? "muted" : "\(level)/\(max)"
+        case let .ready(model, vendor): deviceName = vendor == "?" ? model : "\(vendor) \(model)"
+        case let .currentApp(pkg): currentPackage = pkg
+        case let .volume(level, max, isMuted):
+            volume = level
+            volumeMax = max == 0 ? 100 : max
+            muted = isMuted
         case .poweredOn: break
         case let .error(message): note(message)
         case let .disconnected(reason):
             // Ignore late events from a session we already replaced.
             guard session === remote else { return }
             remote = nil
-            phase = .disconnected
+            phase = .offline(reason ?? "Disconnected")
             note("Disconnected\(reason.map { ": \($0)" } ?? "")")
+            scheduleRetry()
         }
     }
 
