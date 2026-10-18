@@ -6,7 +6,7 @@ remote service fires `ACTION_VIEW` on the URI; whichever app's intent filter cla
 
 | App (package) | URL form that works | Result | Gotchas |
 |---|---|---|---|
-| Netflix (`com.netflix.ninja`) | `https://www.netflix.com/title/<id>` (also `/watch/<id>`, `nflx://`) | Opens Netflix; the title page autoplays its preview. | FLAG_SECURE, so screenshots are blocked and the title wasn't confirmed visually. **Needs a human glance.** |
+| Netflix (`com.netflix.ninja`) | `https://www.netflix.com/title/<id>` (also `/watch/<id>`, `nflx://`) | Opens Netflix. **On a cold start it shows "Who's watching?" and drops the link** (reported by the user). Once a profile is active, re-sending the link works, so the widget re-sends after OK or shows an "Open title again" button. | FLAG_SECURE, so screenshots are blocked and the title wasn't confirmed visually. **Needs a human glance.** |
 | Prime Video (`com.amazon.amazonvideo.livingroom`) | `https://app.primevideo.com/detail?gti=amzn1.dv.gti.<uuid>` | ✅ **The Family Man** detail page | `www.primevideo.com/detail/...` is **not** claimed and falls to a browser stub. A cold start shows the profile picker first, then the deep link continues after OK. |
 | JioHotstar (`in.startv.hotstar`) | `https://www.hotstar.com/...` (also `hotstar://`) | `/in/shows/aarya/1260028094` → **ERR_PB_1410** screen. Without `/in/`, it opened a secure screen I couldn't inspect. | `www.jiohotstar.com` is **not** claimed (the web 301s to hotstar.com anyway). IDs are numeric and the slug is ignored. **Needs a human glance.** |
 | YouTube (`com.google.android.youtube.tv`) | `https://www.youtube.com/watch?v=<id>` | ✅ Opens the video player | — |

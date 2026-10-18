@@ -308,6 +308,12 @@ struct PanelView: View {
     private var footer: some View {
         HStack(spacing: 6) {
             switch model.phase {
+            case .connected where model.pendingRelaunch != nil && model.toast == nil:
+                Text("Picked a Netflix profile?").lineLimit(1)
+                Button("Open title again") { model.relaunchPending() }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Palette.accent)
+                    .font(.system(size: 11, weight: .semibold))
             case .connected where model.toast != nil:
                 Image(systemName: "play.tv").foregroundStyle(Palette.accent)
                 Text(model.toast ?? "").lineLimit(1)

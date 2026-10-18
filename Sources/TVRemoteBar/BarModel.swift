@@ -62,6 +62,12 @@ final class BarModel: ObservableObject {
     @Published var searching = false
     @Published var searchError: String?
     @Published var toast: String?
+    @Published var pendingRelaunch: PendingLink?
+
+    struct PendingLink: Equatable {
+        let url: String
+        let title: String
+    }
     private var searchTask: Task<Void, Never>?
 
     private var remote: RemoteSession?
@@ -166,6 +172,24 @@ final class BarModel: ObservableObject {
 
     func press(_ key: KeyCode) {
         remote?.sendKey(key)
+        // OK on Netflix's "Who's watching?" screen: the cold start dropped the deep link, so
+        // send it again once the profile has loaded.
+        if key == .dpadCenter, let pending = pendingRelaunch {
+            pendingRelaunch = nil
+            Task {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                remote?.launch(appLink: pending.url)
+                show("Opening \(pending.title)…")
+            }
+        }
+    }
+
+    /// Re-sends the last title link (footer button, for profiles picked with the TV's own remote).
+    func relaunchPending() {
+        guard let pending = pendingRelaunch, let remote else { return }
+        pendingRelaunch = nil
+        remote.launch(appLink: pending.url)
+        show("Opening \(pending.title)…")
     }
 
     func open(_ app: StreamingApp) {
@@ -177,6 +201,16 @@ final class BarModel: ObservableObject {
         guard let remote else { return }
         remote.launch(appLink: offer.url)
         show("Opening \(title) on \(offer.app.name)…")
+        // Netflix drops deep links when it cold-starts into the profile picker (observed on the
+        // R4); Prime and Apple TV carry the link through their pickers. Offer a re-send for 90s.
+        if offer.app.id == "com.netflix.ninja" {
+            let pending = PendingLink(url: offer.url, title: title)
+            pendingRelaunch = pending
+            Task {
+                try? await Task.sleep(nanoseconds: 90_000_000_000)
+                if pendingRelaunch == pending { pendingRelaunch = nil }
+            }
+        }
     }
 
     private func show(_ message: String) {
