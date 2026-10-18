@@ -35,7 +35,9 @@ Xcode must be installed. This Mac only had the Command Line Tools on 2026-10-18.
 (ad-hoc signed, menu-bar only). The panel has power, the current app, mute, a volume slider (sent
 as volume key steps, since the protocol has no absolute volume), a D-pad, Back/Home/Play, and
 one-click tiles for Netflix, Prime, JioHotstar, YouTube, SonyLIV and Apple TV.
-Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
+Open it from the menu-bar TV icon, **⌃⌥T** anywhere, or by opening "TV Remote" again from
+Spotlight or Finder. The last two matter when a crowded menu bar hides the icon behind the notch;
+⌘-drag the icon to the right to keep it visible. Keyboard while it's open: arrows = D-pad, Return = OK, Esc/Delete = Back, Space = play/pause, H = Home.
 It shares the Mac's Keychain identity with `atvctl`, so it's already paired. Design check without
 a screen: `TVRemoteBar --snapshot out.png` renders the panel with sample state.
 
