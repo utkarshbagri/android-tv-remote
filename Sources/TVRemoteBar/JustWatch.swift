@@ -64,8 +64,9 @@ enum JustWatch {
             // Best offer per app: subscription beats free beats ads beats rent/buy.
             var best: [String: (rank: Int, offer: Offer)] = [:]
             for o in node.offers {
-                guard let host = URL(string: o.standardWebURL)?.host,
-                      let pkg = appForHost[host], let app = apps[pkg] else { continue }
+                guard let url = URL(string: o.standardWebURL), let host = url.host,
+                      let pkg = appForHost[host], let app = apps[pkg],
+                      isTitleLink(url) else { continue }
                 let r = rank[o.monetizationType] ?? 9
                 if let current = best[pkg], current.rank <= r { continue }
                 best[pkg] = (r, Offer(app: app, url: tvLink(o.standardWebURL, host: host),
@@ -80,6 +81,14 @@ enum JustWatch {
             return Title(id: node.id, name: node.content.title, year: node.content.originalReleaseYear,
                          isShow: node.objectType == "SHOW", poster: poster, offers: offers)
         }
+    }
+
+    /// Some offers link to a store front, not the title. E.g. Raanjhanaa's Apple TV "Eros Now"
+    /// channel offer is just `https://tv.apple.com/in`, which drops you on Apple TV's home.
+    /// A title link has more in its path than a country code.
+    static func isTitleLink(_ url: URL) -> Bool {
+        let parts = url.path.split(separator: "/")
+        return !(parts.isEmpty || (parts.count == 1 && parts[0].count == 2))
     }
 
     /// Netflix's TV app ignores deep links unless they carry `source=30`. The usual route is an
