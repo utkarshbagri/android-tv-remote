@@ -15,7 +15,7 @@ remote service fires `ACTION_VIEW` on the URI; whichever app's intent filter cla
 | F1 TV (`com.formulaone.production`) | none | ❌ Declares no VIEW intent filters, so it can't be deep-linked. `market://launch?id=…` is unresolved on this TV (Play Store is enabled but doesn't claim it, `result -91`). `intent:#Intent;…component=…;end` is rejected by the remote service. | Can't even be *opened* over the remote protocol. Options: ADB `am start`, or put it on the custom launcher and navigate with the D-pad. |
 
 ## Implications for cross-app search (next phase)
-- Prime: build `app.primevideo.com/detail?gti=` links. TMDB/JustWatch give www ASIN-style IDs, so we'll need a GTI mapping (the page source carries `pageTitleId`).
+- Prime: needs `app.primevideo.com/detail?gti=` links. JustWatch already returns this form (see below), so no GTI mapping is needed.
 - JioHotstar: use `www.hotstar.com` links, never `jiohotstar.com`. Behaviour still needs checking by eye.
 - Profile pickers (Prime, Apple TV) interrupt but don't lose the link. The app could send OK about 6s after launching.
 - F1 TV is out unless we use ADB.
